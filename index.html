@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Happy New Year</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+body{
+  background:#050505;
+  color:#fff;
+  overflow:hidden;
+  font-family:'Georgia', serif;
+}
+
+/* ===== FIREWORKS ===== */
+canvas{
+  position:fixed;
+  inset:0;
+  z-index:0;
+}
+
+/* ===== PAGE SYSTEM ===== */
+.page{
+  position:relative;
+  z-index:1;
+  height:100vh;
+  width:100%;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  text-align:center;
+}
+
+.active{display:flex}
+
+/* ===== PAGE 1 ===== */
+.logo{
+  font-size:3rem;
+  letter-spacing:4px;
+  margin-bottom:25px;
+  position:relative;
+}
+
+.logo:before,.logo:after{
+  content:"";
+  width:60px;
+  height:2px;
+  background:#aaa;
+  position:absolute;
+  top:50%;
+}
+
+.logo:before{left:-80px}
+.logo:after{right:-80px}
+
+input{
+  width:300px;
+  padding:16px;
+  font-size:1.1rem;
+  border:none;
+  outline:none;
+  text-align:center;
+  border-radius:30px;
+}
+
+/* ===== PAGE 2 LETTER ===== */
+#page2{
+  overflow-y:auto;
+  padding:80px 20px;
+}
+
+.letter{
+  max-width:720px;
+  background:
+    linear-gradient(#f7f1e8 1px, transparent 1px),
+    linear-gradient(90deg,#f7f1e8 1px, transparent 1px);
+  background-size:100% 32px,32px 100%;
+  background-color:#fdf8f1;
+  padding:70px;
+  color:#2b2b2b;
+  box-shadow:0 30px 80px rgba(0,0,0,.4);
+}
+
+.letter h2{
+  text-align:center;
+  margin-bottom:40px;
+  font-size:2.2rem;
+}
+
+.letter p{
+  line-height:1.9;
+  margin-bottom:25px;
+  font-size:1.1rem;
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="fireworks"></canvas>
+
+<!-- PAGE 1 -->
+<div class="page active" id="page1">
+  <div class="logo">HAPPY NEW YEAR</div>
+  <input id="nameInput" placeholder="Enter your name">
+</div>
+
+<!-- PAGE 2 -->
+<div class="page" id="page2">
+  <div class="letter">
+    <h2 id="title"></h2>
+    <p>
+      A new year is never just about time changing. It is about the quiet hope
+      that something better is waiting ahead, even if we cannot see it yet.
+    </p>
+    <p>
+      Whatever you carried from the past year, let it rest here. You survived
+      everything that once felt too heavy, and that strength will follow you
+      forward.
+    </p>
+    <p>
+      May this year be gentler with you. May it give you reasons to smile,
+      moments to remember, and days that feel meaningful in ways words cannot
+      fully explain.
+    </p>
+  </div>
+</div>
+
+<script>
+/* ===== PAGE SWITCH ===== */
+const input=document.getElementById("nameInput");
+input.addEventListener("keydown",e=>{
+  if(e.key==="Enter"&&input.value.trim()){
+    page1.classList.remove("active");
+    page2.classList.add("active");
+    document.getElementById("title").innerText=
+      "Happy New Year, "+input.value;
+  }
+});
+
+/* ===== REAL FIREWORKS ===== */
+const canvas=document.getElementById("fireworks");
+const ctx=canvas.getContext("2d");
+let w,h;
+function resize(){w=canvas.width=innerWidth;h=canvas.height=innerHeight}
+addEventListener("resize",resize);resize();
+
+class Firework{
+  constructor(){
+    this.x=Math.random()*w;
+    this.y=h;
+    this.tx=Math.random()*w;
+    this.ty=Math.random()*h*0.5;
+    this.vy=-12-Math.random()*4;
+    this.exploded=false;
+    this.particles=[];
+  }
+  update(){
+    if(!this.exploded){
+      this.y+=this.vy;
+      if(this.y<=this.ty) this.explode();
+    }else{
+      this.particles.forEach(p=>p.update());
+      this.particles=this.particles.filter(p=>p.life>0);
+    }
+  }
+  explode(){
+    this.exploded=true;
+    for(let i=0;i<60;i++)
+      this.particles.push(new Particle(this.x,this.y));
+  }
+  draw(){
+    if(!this.exploded){
+      ctx.fillStyle="#fff";
+      ctx.fillRect(this.x,this.y,2,8);
+    }else this.particles.forEach(p=>p.draw());
+  }
+}
+
+class Particle{
+  constructor(x,y){
+    this.x=x;this.y=y;
+    const a=Math.random()*Math.PI*2;
+    const s=Math.random()*6+2;
+    this.vx=Math.cos(a)*s;
+    this.vy=Math.sin(a)*s;
+    this.life=100;
+  }
+  update(){
+    this.x+=this.vx;
+    this.y+=this.vy;
+    this.vy+=0.05;
+    this.life--;
+  }
+  draw(){
+    ctx.fillStyle=`rgba(255,200,120,${this.life/100})`;
+    ctx.fillRect(this.x,this.y,2,2);
+  }
+}
+
+let fireworks=[];
+function loop(){
+  ctx.fillStyle="rgba(0,0,0,0.2)";
+  ctx.fillRect(0,0,w,h);
+  if(Math.random()<0.04) fireworks.push(new Firework());
+  fireworks.forEach(f=>{f.update();f.draw()});
+  fireworks=fireworks.filter(f=>!f.exploded||f.particles.length);
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+
+</body>
+</html>
